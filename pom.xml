@@ -55,6 +55,10 @@
             <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+        </dependency>
     </dependencies>
 
     <dependencyManagement>
@@ -86,7 +90,7 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>2.3.7.RELEASE</version>
                 <configuration>
-                    <mainClass>com.zj.J2EeHomeWorkSpringBootApplication</mainClass>
+                    <mainClass>com.zj.SpringBootApplication</mainClass>
                 </configuration>
                 <executions>
                     <execution>
