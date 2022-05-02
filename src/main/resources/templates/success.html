@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>success</title>
+</head>
+<body>
+<h3>注册成功</h3>
+<!--打印学生信息-->
+<table>
+    <tr><td>学号:</td><td th:text="${student.getNo()}"></td></tr>
+    <tr><td>姓名:</td><td th:text="${student.getName()}"></td></tr>
+    <tr><td>专业:</td><td th:text="${student.getMajor()}"></td></tr>
+    <tr><td>籍贯:</td><td th:text="${student.getAddress()}"></td></tr>
+    <tr><td>年龄:</td><td th:text="${student.getAge()}"></td></tr>
+    <tr><td>ip:</td><td th:text="${ip}"></td></tr>
+</table>
+</body>
+</html>
