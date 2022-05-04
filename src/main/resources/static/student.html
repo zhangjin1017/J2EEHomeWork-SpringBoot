@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>学生列表</title>
+    <script src="js/jquery-3.6.0.min.js"></script>
+    <script>
+        window.onload=function () {
+            var t1=document.getElementById("t1");
+            $.ajax({
+                url: "http://localhost:8080/student/findAll",
+                type: "get",
+                dataType: "json",
+                success: function (data) {
+                    console.log(data);
+                    var str="";
+                    for(var i=0;i<data.length;i++){
+                        str+=`
+                    <tr><td>`+data[i].no+`</td>
+                        <td>`+data[i].name+`</td>
+                        <td>`+data[i].major+`</td>
+                        <td>`+data[i].address+`</td>
+                        <td>`+data[i].age+`</td>
+                    </tr>`;
+                    }
+                    t1.innerHTML=str;
+                }
+            })
+        }
+    </script>
+</head>
+<body>
+<div id="div1">
+    <table id="t1">
+
+    </table>
+
+</div>
+</body>
+</html>
