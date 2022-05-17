@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zj.middle_book.mapper.BookMapper">
+<!--    查询所有图书-->
+    <select id="findAllBooks" resultType="com.zj.middle_book.entity.Book">
+        select * from books
+    </select>
+<!--    按照书名模糊查询-->
+    <select id="findBooksLikeName" resultType="com.zj.middle_book.entity.Book">
+        select * from books where name like concat('%',#{name},'%')
+    </select>
+<!--    findBooksLikeNameByPage-->
+    <select id="findBooksLikeNameByPage" resultType="com.zj.middle_book.entity.Book">
+        select * from books where name like concat('%',#{name},'%') limit #{start},#{end}
+    </select>
+
+<!--    添加图书-->
+    <insert id="addBook" parameterType="com.zj.middle_book.entity.Book">
+        insert into books(name,author,price,date,description,type)
+        values(#{name},#{author},#{price},#{date},#{description},#{type})
+           </insert>
+<!--    修改图书-->
+    <update id="updateBook" parameterType="com.zj.middle_book.entity.Book">
+        update books set name=#{name},author=#{author},price=#{price},date=#{date},description=#{description},type=#{type}
+        where id=#{id}
+         </update>
+<!--    删除图书-->
+    <delete id="deleteBook" parameterType="int">
+        delete from books where id=#{id}
+    </delete>
+<!--    分页查询-->
+    <select id="findBooksByPage" resultType="com.zj.middle_book.entity.Book">
+        select * from books limit #{start},#{end}
+    </select>
+<!--    获取总数-->
+    <select id="getBooksTotal" resultType="int">
+        select count(*) from books
+    </select>
+</mapper>
+

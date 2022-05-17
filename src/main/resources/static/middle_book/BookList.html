@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图书信息</title>
+    <script src="js/vue.js"></script>
+    <script src="js/axios.js"></script>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="https://unpkg.zhimg.com/element-ui/lib/theme-chalk/index.css">
+    <!-- 引入组件库 -->
+    <script src="https://unpkg.zhimg.com/element-ui/lib/index.js"></script>
+
+</head>
+
+<body>
+<div id="app">
+    <template>
+        <el-input style="float: left;width: 200px" v-model="findLikeNameInput" placeholder="请输入内容"></el-input>
+        <el-button style="float: left;margin-left:10px;margin-top: 5px" size="mini" type="primary" @click="findLikeName">查询</el-button>
+        <el-button style="float: right" size="mini" type="primary" @click="addDialogVisible = true">添加</el-button>
+        <el-table v-loading="loading" element-loading-text="拼命加载中" element-loading-spinner="el-icon-loading"
+                  element-loading-background="rgba(0, 0, 0, 0.8)" :data="tableData" style="width: 100%">
+            <el-table-column prop="id" label="ID" width="100"></el-table-column>
+            <el-table-column prop="name" label="书名"></el-table-column>
+            <el-table-column prop="author" label="作者"></el-table-column>
+            <el-table-column prop="price" label="价格"></el-table-column>
+            <el-table-column prop="date" label="日期"></el-table-column>
+            <el-table-column prop="description" label="描述"></el-table-column>
+            <el-table-column prop="type" label="类型"></el-table-column>
+            <el-table-column label="操作">
+                <template slot-scope="scope">
+
+                    <el-button size="mini" @click="edit(scope.$index, scope.row)">编辑</el-button>
+                    <el-button size="mini" type="danger" @click="del(scope.$index, scope.row)">删除</el-button>
+                </template>
+            </el-table-column>
+        </el-table>
+    </template>
+
+    <!--        分页组件-->
+    <div class="block" style="float: right">
+
+        <el-pagination
+                @size-change="handleSizeChange"
+                @current-change="handleCurrentChange"
+                :current-page="pagination.currentPage"
+                :page-sizes="[5, 10, 20, 50]"
+                :page-size="pagination.pageSize"
+                layout="total, sizes, prev, pager, next, jumper"
+                :total="pagination.total">
+        </el-pagination>
+    </div>
+    <!--        分页组件   end-->
+    <!-- add -->
+    <el-dialog title="添加图书信息" :visible.sync="addDialogVisible" width="30%">
+        <!-- 内容主体区 -->
+        <el-form :model="addBookForm" label-width="100px">
+            <el-form-item label="书名" prop="name" required>
+                <el-input v-model="addBookForm.name"></el-input>
+            </el-form-item>
+            <el-form-item label="作者" prop="author" required>
+                <el-input v-model="addBookForm.author"></el-input>
+            </el-form-item>
+            <el-form-item label="价格" prop="price" required>
+                <el-input v-model="addBookForm.price"></el-input>
+            </el-form-item>
+            <el-form-item label="出版日期" prop="date" required>
+                <el-input v-model="addBookForm.date"></el-input>
+            </el-form-item>
+            <el-form-item label="描述" prop="description" required>
+                <el-input v-model="addBookForm.description"></el-input>
+            </el-form-item>
+            <el-form-item label="类型" prop="type" required>
+                <el-input v-model="addBookForm.type"></el-input>
+            </el-form-item>
+        </el-form>
+        <span slot="footer" class="dialog-footer">
+                <el-button @click="addDialogVisible = false">取 消</el-button>
+                <el-button type="primary" @click="add">确 定</el-button>
+            </span>
+    </el-dialog>
+    <!-- add-end -->
+    <!-- edit -->
+    <el-dialog title="修改图书信息" :visible.sync="editDialogVisible" width="30%">
+        <!-- 内容主体区 -->
+        <el-form :model="editBookForm" label-width="100px">
+            <el-form-item label="书名" prop="name" required>
+                <el-input v-model="editBookForm.name"></el-input>
+            </el-form-item>
+            <el-form-item label="作者" prop="author" required>
+                <el-input v-model="editBookForm.author"></el-input>
+            </el-form-item>
+            <el-form-item label="价格" prop="price" required>
+                <el-input v-model="editBookForm.price"></el-input>
+            </el-form-item>
+            <el-form-item label="出版日期" prop="date" required>
+                <el-input v-model="editBookForm.date"></el-input>
+            </el-form-item>
+            <el-form-item label="描述" prop="description" required>
+                <el-input v-model="editBookForm.description"></el-input>
+            </el-form-item>
+            <el-form-item label="类型" prop="type" required>
+                <el-input v-model="editBookForm.type"></el-input>
+            </el-form-item>
+        </el-form>
+        <span slot="footer" class="dialog-footer">
+                <el-button @click="editDialogVisible = false">取 消</el-button>
+                <el-button type="primary" @click="editCommit">确 定</el-button>
+            </span>
+    </el-dialog>
+    <!-- edit-end -->
+</div>
+
+<script>
+    new Vue({
+        el: "#app",
+        data: {
+            loading: true,
+            tableData: [],
+            addDialogVisible: false, //控制添加图书对话框的显示与隐藏
+            findLikeNameInput: "", //查询框
+            pagination: {
+                currentPage: 1,
+                pageSize: 5,
+                total: 0
+            },
+            addBookForm: {
+                name: '',
+                author: '',
+                price: '',
+                date: '',
+                description: '',
+                type: ''
+            },
+            editDialogVisible: false, //控制修改图书对话框的显示与隐藏
+            editBookForm: {
+                id: '',
+                name: '',
+                author: '',
+                price: '',
+                date: '',
+                description: '',
+                type: ''
+            },
+        },
+
+        methods: {
+            getBookTotal() {
+                axios.get("http://localhost:8080/book/getBooksTotal")
+                    .then(res => {
+                        if (res.data.data != null) {
+                            this.pagination.total = res.data.data;
+
+                        } else {
+                            console.log(res.data.reason);
+                        }
+                    })
+            },
+            getBooksByPage() {
+                axios.get("http://localhost:8080/book/findBooksByPage" + "/" + this.pagination.currentPage + "/" + this.pagination.pageSize)
+                    .then(res => {
+                        if (res.data.data != null) {
+                            this.tableData = res.data.data;
+                            this.loading = false;
+
+                        } else {
+                            console.log(res.data.reason);
+                        }
+                    })
+            },
+            getAllBook() {
+                axios.get("http://localhost:8080/book/findAllBooks")
+                    .then(res => {
+                        if (res.data.data != null) {
+                            this.tableData = res.data.data;
+                            this.loading = false;
+                        } else {
+                            console.log(res.data.reason);
+                        }
+                    })
+            },
+
+            del(index, row) {
+                console.log(index, row)
+
+                this.$confirm('此操作将永久删除该图书信息, 是否继续?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    const params = new URLSearchParams();
+                    params.append('id', row.id);
+                    axios.post("http://localhost:8080/book/deleteBook", params)
+                        .then(res => {
+                            if (res.data.code === 200) {
+                                this.$message({
+                                    type: 'success',
+                                    message: '删除' + row.name + '成功!'
+                                });
+                                //方法1
+                                // this.getAllBook();
+                                //方法2
+                                // location.reload();
+                                //方法3
+                                this.tableData.splice(index, 1);
+                            } else {
+                                console.log(res.data.reason);
+                            }
+                        })
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消删除'
+                    });
+                });
+
+            },
+            add() {
+                this.addDialogVisible = false;
+                console.log(this.addBookForm);
+                const Book = new URLSearchParams();
+                Book.append('name', this.addBookForm.name);
+                Book.append('author', this.addBookForm.author);
+                Book.append('price', this.addBookForm.price);
+                Book.append('date', this.addBookForm.date);
+                Book.append('description', this.addBookForm.description);
+                Book.append('type', this.addBookForm.type);
+                axios.post("http://localhost:8080/book/addBook", Book)
+                    .then(res => {
+                        if (res.data.code === 200) {
+                            this.tableData.push(res.data.data);
+                            this.$message({
+                                type: 'success',
+                                message: '添加' + this.addBookForm.name + '成功!'
+                            });
+                            // this.getBooksByPage();//这里最好刷新一下页面
+                            location.reload();
+                            this.addBookForm = {
+                                name: '',
+                                author: '',
+                                price: '',
+                                date: '',
+                                description: '',
+                                type: ''
+                            }
+                        } else {
+                            console.log(res.data.reason);
+                        }
+                    })
+
+            },
+            edit(index, row) {
+                this.editDialogVisible = true;
+                this.editBookForm = {
+                    id: row.id,
+                    name: row.name,
+                    author: row.author,
+                    price: row.price,
+                    date: row.date,
+                    description: row.description,
+                    type: row.type
+                }
+            },
+            editCommit() {
+                console.log(this.editBookForm);
+                const Book = new URLSearchParams();
+                Book.append('id', this.editBookForm.id);
+                Book.append('name', this.editBookForm.name);
+                Book.append('author', this.editBookForm.author);
+                Book.append('price', this.editBookForm.price);
+                Book.append('date', this.editBookForm.date);
+                Book.append('description', this.editBookForm.description);
+                Book.append('type', this.editBookForm.type);
+                axios.post("http://localhost:8080/book/updateBook", Book)
+                    .then(res => {
+                        if (res.data.code === 200) {
+                            this.tableData.push(res.data.data);
+                            this.$message({
+                                type: 'success',
+                                message: '修改' + this.editBookForm.name + '成功!'
+                            });
+                            this.getBooksByPage();
+                            this.editBookForm = {
+                                id: '',
+                                name: '',
+                                author: '',
+                                price: '',
+                                date: '',
+                                description: '',
+                                type: ''
+                            }
+                            this.editDialogVisible = false;
+                        } else {
+                            console.log(res.data.reason);
+                        }
+                    })
+            },
+            findLikeName(){
+                axios.get("http://localhost:8080/book/findLikeName" + "/" + this.findLikeNameInput+ "/" + this.pagination.currentPage + "/" + this.pagination.pageSize)
+                    .then(res => {
+                        if (res.data.data != null) {
+                            this.tableData = res.data.data;
+                            this.loading = false;
+                            this.pagination.total = res.data.data.length;
+
+                        } else {
+                            console.log(res.data.reason);
+                        }
+                    })
+            },
+            handleClose(done) {
+                this.$confirm('确认关闭？')
+                    .then(_ => {
+                        done();
+                    })
+                    .catch(_ => {
+                    });
+            },
+            handleSizeChange(val) {
+                this.pagination.pageSize = val;
+                this.getBooksByPage();
+            },
+            handleCurrentChange(val) {
+                this.pagination.currentPage = val;
+                this.getBooksByPage();
+            }
+        },
+
+        mounted: function () {
+            console.log("挂载完成");
+            this.getBookTotal();
+            this.getBooksByPage();
+        }
+    })
+
+</script>
+</body>
+
+</html>
